@@ -1,0 +1,141 @@
+{
+  "theme": "dark",
+  "archetype": "Archetype 5: Jewel & Luxury",
+  "mood": "Premium, exclusive, wealthy, cinematic, authoritative",
+  "colors": {
+    "background": {
+      "default": "#050505",
+      "surface": "#121212",
+      "surface_elevated": "#1A1A1A",
+      "surface_glass": "rgba(20, 20, 20, 0.7)"
+    },
+    "text": {
+      "primary": "#F9FAFB",
+      "secondary": "#A1A1AA",
+      "muted": "#52525B",
+      "gold_highlight": "#D4AF37",
+      "gold_light": "#FCE68C"
+    },
+    "brand": {
+      "primary": "#D4AF37",
+      "primary_hover": "#B5952F",
+      "primary_active": "#997A24",
+      "primary_muted": "rgba(212, 175, 55, 0.15)"
+    },
+    "feedback": {
+      "success": "#10B981",
+      "error": "#EF4444",
+      "warning": "#F59E0B"
+    },
+    "borders": {
+      "default": "#27272A",
+      "focus": "#D4AF37",
+      "gold_subtle": "rgba(212, 175, 55, 0.3)"
+    }
+  },
+  "typography": {
+    "font_families": {
+      "heading": "'Cabinet Grotesk', sans-serif",
+      "body": "'Manrope', sans-serif",
+      "mono": "'JetBrains Mono', monospace"
+    },
+    "scales": {
+      "h1": "text-5xl sm:text-6xl tracking-tight font-black",
+      "h2": "text-3xl sm:text-4xl tracking-tight font-bold",
+      "h3": "text-2xl font-bold",
+      "h4": "text-xl font-semibold",
+      "body_large": "text-lg leading-relaxed",
+      "body_base": "text-base leading-relaxed",
+      "body_small": "text-sm leading-normal",
+      "overline": "text-xs uppercase tracking-[0.2em] font-bold text-[#D4AF37]"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous spacing. The platform must feel like an exclusive club, not a cluttered spreadsheet.",
+    "container_padding": "p-6 md:p-8 lg:p-12",
+    "section_gap": "gap-16 md:gap-24 lg:gap-32",
+    "grid_bento": "grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8",
+    "border_radius": "rounded-none md:rounded-sm",
+    "shadows": {
+      "ambient": "0 8px 32px rgba(0, 0, 0, 0.4)",
+      "gold_glow": "0 0 24px rgba(212, 175, 55, 0.15)"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#D4AF37] text-black font-bold uppercase tracking-wide hover:bg-[#B5952F] transition-all rounded-sm px-8 py-4",
+      "secondary": "bg-transparent border border-[#D4AF37] text-[#D4AF37] font-bold uppercase tracking-wide hover:bg-[#D4AF37] hover:text-black transition-all rounded-sm px-8 py-4",
+      "ghost": "text-white hover:text-[#D4AF37] hover:bg-white/5 transition-all rounded-sm px-6 py-3"
+    },
+    "cards": {
+      "standard": "bg-[#121212] border border-[#27272A] p-6 hover:border-[#D4AF37]/50 transition-colors",
+      "glass": "bg-[#121212]/70 backdrop-blur-xl border border-[#D4AF37]/20 p-8 shadow-[0_8px_32px_rgba(0,0,0,0.5)]",
+      "highlight": "bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] border border-[#D4AF37] p-8 relative overflow-hidden"
+    },
+    "inputs": {
+      "standard": "bg-[#050505] border border-[#27272A] text-white focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-sm px-4 py-3"
+    },
+    "tables": {
+      "container": "w-full text-left border-collapse",
+      "header": "text-xs uppercase tracking-widest text-zinc-400 border-b border-zinc-800 pb-4",
+      "row": "border-b border-zinc-900/50 hover:bg-zinc-900/30 transition-colors",
+      "cell": "py-4 text-sm text-zinc-300"
+    }
+  },
+  "specific_design_patterns": {
+    "currency_formatting": "Always use Indian formatting (₹ with lakh/crore commas, e.g., ₹2,50,000 or ₹1,00,00,000). Never use USD or Western million/billion formatting.",
+    "genealogy_tree_view": "Must be rendered on a pure black background (#050505). Nodes should be dark circular or pill shapes with a 1px solid gold border (#D4AF37). Active/Premium members should have a subtle gold drop-shadow. Connecting lines must be solid #D4AF37 at 40% opacity. Include a zoom/pan wrapper. Avoid generic boxy org-charts; it should look like an elite network.",
+    "gold_accents": "Do not overuse gold. Gold is for values (earnings), primary actions (CTAs), and active states. 90% of the UI should be dark gray, black, and white.",
+    "icons": "Use lucide-react with stroke-width 1.5. For key metric icons (e.g., wallet, team), use the primary gold color."
+  },
+  "pages": {
+    "landing": {
+      "hero": "Dark cinematic hero. Large Cabinet Grotesk H1. Subtitle with strong value proposition. CTA: 'Buy Product Kit'. Use abstract gold texture image as a subtle background.",
+      "plan_explainer": "Bento grid explaining the ₹10,000 Product Kit, 24-month cashback, and 3 referral incomes.",
+      "income_tables": "Minimalist dark tables showing Direct Referral, Level Income, and Team Sales. Emphasize the ₹ percentages with gold text.",
+      "rewards_milestones": "Vertical timeline or tiered cards. Highlighting the 25 recruits -> ₹5,000 bonus -> up to ₹100Cr.",
+      "product_kit_cta": "Large split section: High-end image of the 18 agro products kit on the left, purchase details and gold CTA on the right."
+    },
+    "auth": {
+      "layout": "Split screen. Left: Abstract gold geometric image. Right: Login/Register form.",
+      "fields": "Sponsor Referral Code (mandatory for register), Name, Email, Password. Minimal inputs, focus on borders and gold highlights."
+    },
+    "user_dashboard": {
+      "kpis": "Top row of 4 cards: Current Wallet Balance (large gold text), Next Payout Date, Total Direct Referrals, Team Profit.",
+      "quick_actions": "Copy Referral Link (with icon), Withdraw Funds, View Tree.",
+      "recent_activity": "Mini-table showing recent referral signups or cashback drops."
+    },
+    "genealogy_tree": {
+      "layout": "Full width/height dedicated view. Left/Right binary structure clearly visible.",
+      "node_details": "Hovering a node shows their rank, total sales, and active status."
+    },
+    "income_history": {
+      "layout": "Tabs for: All, Direct, Level, Team, Cashback, Salary.",
+      "data": "Data-heavy table. Columns: Date, Source (User/Level), Amount (Gold), Status. Use Shadcn Tabs."
+    },
+    "shop": {
+      "layout": "Grid of products. Dark background. Images should have a subtle dark overlay that lifts on hover.",
+      "product_card": "Image, Title, Category, Price, 'Add to Cart' button (ghost until hover).",
+      "banners": "Buy 1 Get 1 / Festive offers highlighted in gold-bordered feature boxes."
+    },
+    "admin_dashboard": {
+      "metrics": "System-wide stats: Total Users, Total Revenue, Total Payouts Pending.",
+      "tables": "Users, Products, Categories, Offers, Orders, Payouts.",
+      "controls": "Approve payouts, manage tree nodes, set system configurations."
+    }
+  },
+  "media": {
+    "hero_background": "https://images.unsplash.com/photo-1761437856299-af640f6e75ad?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwyfHxnb2xkJTIwZ2VvbWV0cmljJTIwYWJzdHJhY3R8ZW58MHx8fHwxNzc2NTE4Mzk5fDA&ixlib=rb-4.1.0&q=85",
+    "abstract_texture_1": "https://images.unsplash.com/photo-1764437358247-51f409686853?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxnb2xkJTIwZ2VvbWV0cmljJTIwYWJzdHJhY3R8ZW58MHx8fHwxNzc2NTE4Mzk5fDA&ixlib=rb-4.1.0&q=85",
+    "product_kit_placeholder": "https://images.unsplash.com/photo-1770048792339-d8f8d8d2dbeb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxNzV8MHwxfHNlYXJjaHw0fHxza2luY2FyZSUyMGJsYWNrJTIwcGFja2FnaW5nfGVufDB8fHx8MTc3NjUxODM5OXww&ixlib=rb-4.1.0&q=85"
+  },
+  "instructions_to_main_agent": [
+    "Strictly adhere to the dark theme with gold accents. Do not introduce any other colors (e.g., no blue, purple, or green unless for specific success/error states).",
+    "Use Cabinet Grotesk for all headings. Install via standard web fonts if necessary, or map to a similar system font if unavailable, but prefer importing it.",
+    "Implement Indian currency formatting strictly across all modules (e.g., ₹1,00,000).",
+    "For the Binary Tree view, implement a custom visualization using a library like react-flow or D3, stylized heavily with black backgrounds and gold nodes.",
+    "In the User Panel, emphasize the ₹10,000 kit and the 24-month cashback. It should feel like a premium investment dashboard.",
+    "Ensure all interactive elements have data-testid attributes for testing.",
+    "Do not use generic 'Card' components from Shadcn without customizing them to match the dark/gold aesthetic (e.g., changing borders to #27272A and backgrounds to #121212)."
+  ]
+}
