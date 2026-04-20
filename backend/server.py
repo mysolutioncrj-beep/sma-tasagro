@@ -1109,7 +1109,9 @@ async def on_shutdown():
 app.include_router(api)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://sma-tasagro-yr9p.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
