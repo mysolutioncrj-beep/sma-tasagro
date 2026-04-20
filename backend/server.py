@@ -1110,7 +1110,9 @@ app.include_router(api)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://sma-tasagro-yr9p.vercel.app"
+        "https://sma-tasagro-yr9p.vercel.app",
+        "https://sma-tasagro.com",
+        "https://www.sma-tasagro.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
