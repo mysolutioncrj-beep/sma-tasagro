@@ -130,9 +130,7 @@ export default function Register() {
               <div className="text-[11px] tracking-[0.32em] text-[#d4af37] font-bold uppercase text-right">SMA-TasAgro</div>
               <div className="text-xs text-zinc-500 text-right">Wealth Network</div>
             </div>
-            <div className="w-10 h-10 flex items-center justify-center" style={{ background: "#d4af37" }}>
-              <Crown size={20} color="#050505" />
-            </div>
+            <img src="https://customer-assets.emergentagent.com/job_mlm-kit-commerce/artifacts/tv5jynvy_WhatsApp%20Image%202026-04-21%20at%203.23.17%20PM%20%281%29.jpeg" alt="SMA-TasAgro" className="w-12 h-12 object-contain rounded-sm bg-white p-1" />
           </Link>
           <div className="text-right">
             <div className="overline mb-4 justify-end">Begin your journey</div>

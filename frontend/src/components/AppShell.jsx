@@ -42,9 +42,7 @@ export default function AppShell({ children }) {
     <div className="min-h-screen flex" style={{ background: "#050505" }} data-testid="app-shell">
       <aside className="w-64 border-r border-[#1a1a1a] hidden lg:flex flex-col" style={{ background: "#0a0a0a" }}>
         <Link to="/" className="px-6 py-6 border-b border-[#1a1a1a] flex items-center gap-3" data-testid="brand-link">
-          <div className="w-9 h-9 flex items-center justify-center" style={{ background: "#d4af37" }}>
-            <Crown size={18} color="#050505" strokeWidth={2.2} />
-          </div>
+          <img src="https://customer-assets.emergentagent.com/job_mlm-kit-commerce/artifacts/tv5jynvy_WhatsApp%20Image%202026-04-21%20at%203.23.17%20PM%20%281%29.jpeg" alt="SMA-TasAgro" className="w-10 h-10 object-contain rounded-sm bg-white p-0.5" />
           <div>
             <div className="text-[11px] tracking-[0.28em] text-[#d4af37] font-bold uppercase">SMA-TasAgro</div>
             <div className="text-xs text-zinc-500">Wealth Network</div>
@@ -108,9 +106,7 @@ export default function AppShell({ children }) {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-16 border-b border-[#1a1a1a] flex items-center justify-between px-6" style={{ background: "#0a0a0a" }}>
           <div className="lg:hidden flex items-center gap-2">
-            <div className="w-8 h-8 flex items-center justify-center" style={{ background: "#d4af37" }}>
-              <Crown size={16} color="#050505" />
-            </div>
+            <img src="https://customer-assets.emergentagent.com/job_mlm-kit-commerce/artifacts/tv5jynvy_WhatsApp%20Image%202026-04-21%20at%203.23.17%20PM%20%281%29.jpeg" alt="SMA-TasAgro" className="w-8 h-8 object-contain rounded-sm bg-white p-0.5" />
             <span className="text-[#d4af37] font-bold tracking-[0.2em] text-sm">SMA-TASAGRO</span>
           </div>
           <div className="text-xs text-zinc-500 tracking-widest uppercase hidden lg:block">
