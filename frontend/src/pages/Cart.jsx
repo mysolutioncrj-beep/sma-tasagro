@@ -5,7 +5,7 @@ import { formatINR } from "@/lib/format";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 
-const [loading , setLoading] = useState("hello")
+
 
 export default function Cart() {
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem("cart") || "[]"));
