@@ -23,7 +23,7 @@ export default function Landing() {
               <Crown size={20} color="#050505" strokeWidth={2.2} />
             </div>
             <div>
-              <div className="text-[11px] tracking-[0.32em] text-[#d4af37] font-bold uppercase">Agro MLM</div>
+              <div className="text-[11px] tracking-[0.32em] text-[#d4af37] font-bold uppercase">SMA-TasAgro</div>
               <div className="text-xs text-zinc-500 tracking-wide">Wealth Network · est. 2026</div>
             </div>
           </Link>
@@ -240,7 +240,7 @@ export default function Landing() {
               <Crown size={16} color="#050505" />
             </div>
             <div>
-              <div className="text-[11px] tracking-[0.32em] text-[#d4af37] font-bold uppercase">Agro MLM</div>
+              <div className="text-[11px] tracking-[0.32em] text-[#d4af37] font-bold uppercase">SMA-TasAgro</div>
               <div className="text-xs text-zinc-500">© 2026 · All rights reserved</div>
             </div>
           </div>

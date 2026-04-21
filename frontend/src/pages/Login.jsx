@@ -43,7 +43,7 @@ export default function Login() {
               <Crown size={20} color="#050505" />
             </div>
             <div>
-              <div className="text-[11px] tracking-[0.32em] text-[#d4af37] font-bold uppercase">Agro MLM</div>
+              <div className="text-[11px] tracking-[0.32em] text-[#d4af37] font-bold uppercase">SMA-TasAgro</div>
               <div className="text-xs text-zinc-500">Wealth Network</div>
             </div>
           </Link>

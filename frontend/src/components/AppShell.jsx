@@ -46,7 +46,7 @@ export default function AppShell({ children }) {
             <Crown size={18} color="#050505" strokeWidth={2.2} />
           </div>
           <div>
-            <div className="text-[11px] tracking-[0.28em] text-[#d4af37] font-bold uppercase">Agro MLM</div>
+            <div className="text-[11px] tracking-[0.28em] text-[#d4af37] font-bold uppercase">SMA-TasAgro</div>
             <div className="text-xs text-zinc-500">Wealth Network</div>
           </div>
         </Link>
@@ -111,7 +111,7 @@ export default function AppShell({ children }) {
             <div className="w-8 h-8 flex items-center justify-center" style={{ background: "#d4af37" }}>
               <Crown size={16} color="#050505" />
             </div>
-            <span className="text-[#d4af37] font-bold tracking-[0.2em] text-sm">AGRO MLM</span>
+            <span className="text-[#d4af37] font-bold tracking-[0.2em] text-sm">SMA-TASAGRO</span>
           </div>
           <div className="text-xs text-zinc-500 tracking-widest uppercase hidden lg:block">
             {location.pathname.replace("/", "") || "Home"}

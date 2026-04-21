@@ -50,7 +50,7 @@ KIT_CASHBACK_MONTHS = int(os.environ.get("KIT_CASHBACK_MONTHS", "24"))
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 
-app = FastAPI(title="Agro MLM API")
+app = FastAPI(title="SMA-TasAgro API")
 api = APIRouter(prefix="/api")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -999,7 +999,7 @@ async def public_plan():
 
 @api.get("/")
 async def root():
-    return {"service": "Agro MLM API", "status": "ok"}
+    return {"service": "SMA-TasAgro API", "status": "ok"}
 
 
 # ---------------------------------------------------------------------------

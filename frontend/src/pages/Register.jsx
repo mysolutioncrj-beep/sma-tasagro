@@ -127,7 +127,7 @@ export default function Register() {
         <div className="relative z-10 p-12 h-full flex flex-col justify-between">
           <Link to="/" className="flex items-center gap-3 justify-end">
             <div>
-              <div className="text-[11px] tracking-[0.32em] text-[#d4af37] font-bold uppercase text-right">Agro MLM</div>
+              <div className="text-[11px] tracking-[0.32em] text-[#d4af37] font-bold uppercase text-right">SMA-TasAgro</div>
               <div className="text-xs text-zinc-500 text-right">Wealth Network</div>
             </div>
             <div className="w-10 h-10 flex items-center justify-center" style={{ background: "#d4af37" }}>
