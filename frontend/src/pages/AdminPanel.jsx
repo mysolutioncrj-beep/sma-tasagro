@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/apiClient";
 import { formatINR, shortDate } from "@/lib/format";
-import { Users, Package, Tags, BadgePercent, ShoppingBag, Wallet, PlayCircle, Trash2, Plus } from "lucide-react";
+import { Users, Package, Tags, BadgePercent, ShoppingBag, Wallet, PlayCircle, Trash2, Plus, Receipt, Download, X, Eye } from "lucide-react";
 
 const TABS = [
   { key: "overview", label: "Overview", icon: ShoppingBag },
+  { key: "payments", label: "Payments", icon: Receipt },
   { key: "users", label: "Users", icon: Users },
   { key: "kits", label: "Kit Orders", icon: Package },
   { key: "withdrawals", label: "Withdrawals", icon: Wallet },
@@ -41,6 +42,7 @@ export default function AdminPanel() {
       </div>
 
       {tab === "overview" && <Overview />}
+      {tab === "payments" && <PaymentsTab />}
       {tab === "users" && <UsersTab />}
       {tab === "kits" && <KitsTab />}
       {tab === "withdrawals" && <WithdrawalsTab />}
@@ -277,6 +279,307 @@ function OrdersTab() {
           shortDate(o.created_at),
         ]} />
       ))}
+    </div>
+  );
+}
+
+function PaymentsTab() {
+  const [data, setData] = useState({ summary: {}, rows: [] });
+  const [filters, setFilters] = useState({ payment_type: "", status: "", search: "" });
+  const [loading, setLoading] = useState(false);
+  const [detail, setDetail] = useState(null);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filters.payment_type) params.set("payment_type", filters.payment_type);
+      if (filters.status) params.set("status", filters.status);
+      if (filters.search) params.set("search", filters.search);
+      const { data } = await api.get(`/admin/payments?${params.toString()}`);
+      setData(data);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [filters.payment_type, filters.status]);
+
+  const openDetail = async (row) => {
+    const { data } = await api.get(`/admin/payments/${row.payment_type}/${row.ref_id}`);
+    setDetail(data);
+  };
+
+  const exportCsv = () => {
+    const headers = ["Date", "Type", "Direction", "Ref ID", "User", "Amount", "Method", "Status", "Txn Ref", "Note"];
+    const lines = [headers.join(",")];
+    data.rows.forEach((r) => {
+      lines.push([
+        shortDate(r.created_at),
+        r.payment_type,
+        r.direction,
+        r.ref_id,
+        (r.user_name || "").replace(/,/g, " "),
+        r.amount,
+        r.method || "",
+        r.status,
+        (r.transaction_ref || "").replace(/,/g, " "),
+        (r.note || "").replace(/,/g, " ").replace(/\n/g, " "),
+      ].join(","));
+    });
+    const csv = lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `payments_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const s = data.summary || {};
+
+  return (
+    <div data-testid="admin-payments">
+      <div className="grid md:grid-cols-4 gap-4 mb-6">
+        <Kpi label="Money In (Approved)" value={formatINR(s.total_in || 0)} accent testid="payments-in" />
+        <Kpi label="Money Out (Approved)" value={formatINR(s.total_out || 0)} testid="payments-out" />
+        <Kpi label="Pending" value={s.pending_count ?? 0} testid="payments-pending" />
+        <Kpi label="Total Records" value={s.count ?? 0} testid="payments-count" />
+      </div>
+
+      <div className="card-dark p-4 mb-4 flex flex-wrap items-center gap-3">
+        <select
+          value={filters.payment_type}
+          onChange={(e) => setFilters({ ...filters, payment_type: e.target.value })}
+          className="bg-black border border-[#222] text-white px-3 py-2 outline-none text-sm"
+          data-testid="filter-type"
+        >
+          <option value="">All types</option>
+          <option value="kit">Kit purchase</option>
+          <option value="order">Product order</option>
+          <option value="withdrawal">Withdrawal</option>
+        </select>
+        <select
+          value={filters.status}
+          onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+          className="bg-black border border-[#222] text-white px-3 py-2 outline-none text-sm"
+          data-testid="filter-status"
+        >
+          <option value="">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="placed">Placed</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <input
+          value={filters.search}
+          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+          onKeyDown={(e) => e.key === "Enter" && load()}
+          placeholder="Search user, ref ID, txn ref…"
+          className="flex-1 min-w-[200px] bg-black border border-[#222] text-white px-3 py-2 outline-none text-sm"
+          data-testid="filter-search"
+        />
+        <button onClick={load} className="btn-ghost-gold !py-2 !px-4 !text-xs" data-testid="filter-apply">Apply</button>
+        <button onClick={exportCsv} className="btn-gold !py-2 !px-4 !text-xs flex items-center gap-2" data-testid="export-csv">
+          <Download size={14} /> Export CSV
+        </button>
+      </div>
+
+      <div className="card-dark overflow-hidden">
+        <div className="grid grid-cols-12 px-4 py-3 border-b border-[#1a1a1a] text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+          <div className="col-span-2">Date</div>
+          <div className="col-span-1">Type</div>
+          <div className="col-span-2">User</div>
+          <div className="col-span-2">Ref ID</div>
+          <div className="col-span-2">Amount</div>
+          <div className="col-span-1">Method</div>
+          <div className="col-span-1">Status</div>
+          <div className="col-span-1 text-right">Action</div>
+        </div>
+        {loading ? (
+          <div className="p-10 text-center text-zinc-500 text-sm">Loading…</div>
+        ) : data.rows.length === 0 ? (
+          <div className="p-10 text-center text-zinc-500 text-sm">No payments found.</div>
+        ) : (
+          data.rows.map((r) => (
+            <div
+              key={`${r.payment_type}-${r.ref_id}`}
+              className="grid grid-cols-12 px-4 py-3 border-b border-[#141414] last:border-0 hover:bg-[#0f0f0f] text-sm items-center"
+              data-testid={`payment-row-${r.ref_id}`}
+            >
+              <div className="col-span-2 text-xs text-zinc-400">{shortDate(r.created_at)}</div>
+              <div className="col-span-1">
+                <span className={`text-[10px] uppercase tracking-widest px-2 py-1 ${
+                  r.payment_type === "kit" ? "bg-[#d4af37]/10 text-[#d4af37]" :
+                  r.payment_type === "order" ? "bg-blue-500/10 text-blue-300" :
+                  "bg-red-500/10 text-red-300"
+                }`}>{r.payment_type}</span>
+              </div>
+              <div className="col-span-2 truncate text-white">{r.user_name || "—"}</div>
+              <div className="col-span-2 font-mono text-[11px] text-zinc-500 truncate">{r.ref_id?.slice(0, 12)}</div>
+              <div className={`col-span-2 font-bold font-mono ${r.direction === "in" ? "text-[#d4af37]" : "text-red-400"}`}>
+                {r.direction === "in" ? "+" : "−"}{formatINR(r.amount)}
+              </div>
+              <div className="col-span-1 text-xs uppercase tracking-widest text-zinc-400">{r.method || "—"}</div>
+              <div className="col-span-1"><Status s={r.status} /></div>
+              <div className="col-span-1 text-right">
+                <button onClick={() => openDetail(r)} className="text-[#d4af37] hover:underline text-xs inline-flex items-center gap-1" data-testid={`view-${r.ref_id}`}>
+                  <Eye size={12} /> View
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {detail && <PaymentDetailModal detail={detail} onClose={() => setDetail(null)} onSaved={() => { setDetail(null); load(); }} />}
+    </div>
+  );
+}
+
+function PaymentDetailModal({ detail, onClose, onSaved }) {
+  const d = detail.data || {};
+  const u = detail.user || {};
+  const type = detail.payment_type;
+  const refId = d.order_id || d.withdrawal_id;
+  const [txnRef, setTxnRef] = useState(d.transaction_ref || "");
+  const [note, setNote] = useState(d.note || "");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api.patch(`/admin/payments/${type}/${refId}/note`, { transaction_ref: txnRef, note });
+      toast.success("Payment record updated");
+      onSaved();
+    } catch {
+      toast.error("Update failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose} data-testid="payment-detail-modal">
+      <div className="card-dark gold-border max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-[#1a1a1a] flex items-center justify-between sticky top-0 bg-[#121212] z-10">
+          <div>
+            <div className="overline">Payment Record · {type.toUpperCase()}</div>
+            <div className="text-lg font-bold text-white mt-1 font-mono">{refId}</div>
+          </div>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white" data-testid="close-detail"><X size={20} /></button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <Kv label="Amount" value={formatINR(d.amount || d.total || 0)} gold />
+            <Kv label="Status" value={<Status s={d.status} />} />
+            <Kv label="Method" value={d.method || d.payment_method || "wallet"} />
+            <Kv label="Created" value={shortDate(d.created_at)} />
+            {d.approved_at && <Kv label="Approved" value={shortDate(d.approved_at)} />}
+            {d.profit != null && <Kv label="Profit" value={formatINR(d.profit)} />}
+          </div>
+
+          <div className="border-t border-[#1a1a1a] pt-4">
+            <div className="overline mb-3">User Info</div>
+            <div className="grid grid-cols-2 gap-4">
+              <Kv label="Name" value={u.name || d.user_name || "—"} />
+              <Kv label="Email" value={u.email || "—"} />
+              <Kv label="Phone" value={u.phone || "—"} />
+              <Kv label="Referral Code" value={<span className="font-mono text-[#d4af37]">{u.referral_code || "—"}</span>} />
+            </div>
+          </div>
+
+          {type === "order" && d.items && (
+            <div className="border-t border-[#1a1a1a] pt-4">
+              <div className="overline mb-3">Items ({d.items.length})</div>
+              <div className="divide-y divide-[#1a1a1a]">
+                {d.items.map((it) => (
+                  <div key={it.product_id} className="flex justify-between py-2 text-sm">
+                    <span className="text-white">{it.name} × {it.quantity}</span>
+                    <span className="text-zinc-400">{formatINR(it.line_total)}</span>
+                  </div>
+                ))}
+              </div>
+              {d.address && <div className="mt-3 text-xs text-zinc-500">Address: {d.address}</div>}
+            </div>
+          )}
+
+          {type === "withdrawal" && d.details && (
+            <div className="border-t border-[#1a1a1a] pt-4">
+              <div className="overline mb-3">Bank / UPI Details</div>
+              <div className="text-sm text-zinc-300 font-mono bg-black p-3 border border-[#222]">{d.details}</div>
+            </div>
+          )}
+
+          <div className="border-t border-[#1a1a1a] pt-4">
+            <div className="overline mb-3">Attach Transaction Reference</div>
+            <div className="grid grid-cols-1 gap-3">
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.22em] text-zinc-500 mb-2">Txn Ref / UTR / Bank ID</label>
+                <input
+                  value={txnRef}
+                  onChange={(e) => setTxnRef(e.target.value)}
+                  className="w-full bg-black border border-[#222] focus:border-[#d4af37] text-white px-3 py-2 outline-none text-sm"
+                  placeholder="e.g. UTR123456 / RAZORPAY-xyz / Bank Ref 998877"
+                  data-testid="txn-ref-input"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.22em] text-zinc-500 mb-2">Admin Note</label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  rows={3}
+                  className="w-full bg-black border border-[#222] focus:border-[#d4af37] text-white px-3 py-2 outline-none text-sm"
+                  placeholder="Any remark for audit trail…"
+                  data-testid="note-input"
+                />
+              </div>
+              <button disabled={saving} onClick={save} className="btn-gold !py-2 !px-5 !text-xs disabled:opacity-60 w-fit" data-testid="save-txn-ref">
+                {saving ? "Saving..." : "Save Reference"}
+              </button>
+            </div>
+          </div>
+
+          {detail.related_commissions && detail.related_commissions.length > 0 && (
+            <div className="border-t border-[#1a1a1a] pt-4">
+              <div className="overline mb-3">Related Commissions ({detail.related_commissions.length})</div>
+              <div className="divide-y divide-[#1a1a1a] max-h-60 overflow-y-auto">
+                {detail.related_commissions.map((t, i) => (
+                  <div key={i} className="flex justify-between py-2 text-xs">
+                    <div>
+                      <div className="text-zinc-300">{t.description}</div>
+                      <div className="text-zinc-600 uppercase tracking-widest">{t.type.replace(/_/g, " ")} · {shortDate(t.created_at)}</div>
+                    </div>
+                    <div className={`font-mono font-bold ${t.amount >= 0 ? "text-[#d4af37]" : "text-red-400"}`}>
+                      {t.amount >= 0 ? "+" : ""}{formatINR(t.amount)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Kpi({ label, value, accent = false, testid }) {
+  return (
+    <div className={`card-dark p-5 ${accent ? "gold-border" : ""}`} data-testid={testid}>
+      <div className="overline">{label}</div>
+      <div className={`text-2xl font-black mt-2 ${accent ? "text-[#d4af37]" : "text-white"}`}>{value}</div>
+    </div>
+  );
+}
+
+function Kv({ label, value, gold = false }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-[0.22em] text-zinc-500">{label}</div>
+      <div className={`text-sm font-medium mt-1 ${gold ? "text-[#d4af37] font-bold" : "text-white"}`}>{value}</div>
     </div>
   );
 }

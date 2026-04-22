@@ -822,6 +822,183 @@ async def admin_reject_withdrawal(withdrawal_id: str, admin: dict = Depends(requ
     return {"ok": True}
 
 
+# ---------------------------------------------------------------------------
+# Unified Payments Report (admin) — consolidates kit orders + product orders + withdrawals
+# ---------------------------------------------------------------------------
+class PaymentNoteIn(BaseModel):
+    transaction_ref: Optional[str] = None
+    note: Optional[str] = None
+
+
+async def _fetch_user_brief(user_id: str) -> dict:
+    if not user_id:
+        return {}
+    try:
+        u = await db.users.find_one({"_id": ObjectId(user_id)}, {"name": 1, "email": 1, "phone": 1, "referral_code": 1})
+    except Exception:
+        return {}
+    if not u:
+        return {}
+    return {
+        "id": str(u["_id"]),
+        "name": u.get("name"),
+        "email": u.get("email"),
+        "phone": u.get("phone"),
+        "referral_code": u.get("referral_code"),
+    }
+
+
+@api.get("/admin/payments")
+async def admin_payments(
+    admin: dict = Depends(require_admin),
+    payment_type: Optional[str] = None,  # kit | order | withdrawal
+    status: Optional[str] = None,
+    user_id: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 500,
+):
+    """Unified payments report across kit_orders (money IN), orders (money IN),
+    withdrawals (money OUT). Returns each as a row with common fields."""
+    rows: List[dict] = []
+
+    if payment_type in (None, "kit"):
+        q = {}
+        if status:
+            q["status"] = status
+        if user_id:
+            q["user_id"] = user_id
+        kits = await db.kit_orders.find(q, {"_id": 0}).sort("created_at", -1).to_list(limit)
+        for k in kits:
+            rows.append({
+                "payment_type": "kit",
+                "direction": "in",
+                "ref_id": k.get("order_id"),
+                "user_id": k.get("user_id"),
+                "user_name": k.get("user_name"),
+                "amount": k.get("amount"),
+                "method": k.get("payment_method"),
+                "status": k.get("status"),
+                "transaction_ref": k.get("transaction_ref"),
+                "note": k.get("note"),
+                "created_at": k.get("created_at"),
+                "approved_at": k.get("approved_at"),
+                "meta": {"description": "Product Kit purchase"},
+            })
+
+    if payment_type in (None, "order"):
+        q = {}
+        if user_id:
+            q["user_id"] = user_id
+        ords = await db.orders.find(q, {"_id": 0}).sort("created_at", -1).to_list(limit)
+        for o in ords:
+            rows.append({
+                "payment_type": "order",
+                "direction": "in",
+                "ref_id": o.get("order_id"),
+                "user_id": o.get("user_id"),
+                "user_name": o.get("user_name"),
+                "amount": o.get("total"),
+                "method": o.get("payment_method", "wallet"),
+                "status": o.get("status"),
+                "transaction_ref": o.get("transaction_ref"),
+                "note": o.get("note"),
+                "created_at": o.get("created_at"),
+                "approved_at": None,
+                "meta": {
+                    "items_count": len(o.get("items", [])),
+                    "profit": o.get("profit"),
+                    "address": o.get("address"),
+                },
+            })
+
+    if payment_type in (None, "withdrawal"):
+        q = {}
+        if status:
+            q["status"] = status
+        if user_id:
+            q["user_id"] = user_id
+        ws = await db.withdrawals.find(q, {"_id": 0}).sort("created_at", -1).to_list(limit)
+        for w in ws:
+            rows.append({
+                "payment_type": "withdrawal",
+                "direction": "out",
+                "ref_id": w.get("withdrawal_id"),
+                "user_id": w.get("user_id"),
+                "user_name": w.get("user_name"),
+                "amount": w.get("amount"),
+                "method": w.get("method"),
+                "status": w.get("status"),
+                "transaction_ref": w.get("transaction_ref"),
+                "note": w.get("note"),
+                "created_at": w.get("created_at"),
+                "approved_at": w.get("approved_at"),
+                "meta": {"details": w.get("details")},
+            })
+
+    # Sort all by created_at desc
+    rows.sort(key=lambda r: r.get("created_at") or "", reverse=True)
+
+    # Optional search filter (name / ref / email via user lookup)
+    if search:
+        s = search.lower()
+        rows = [r for r in rows if s in (r.get("user_name", "") or "").lower()
+                or s in (r.get("ref_id", "") or "").lower()
+                or s in (r.get("transaction_ref") or "").lower()]
+
+    # Summary
+    summary = {
+        "total_in": round(sum(r["amount"] for r in rows if r["direction"] == "in" and r["status"] in ("approved", "placed")), 2),
+        "total_out": round(sum(r["amount"] for r in rows if r["direction"] == "out" and r["status"] == "approved"), 2),
+        "pending_count": sum(1 for r in rows if r["status"] == "pending"),
+        "count": len(rows),
+    }
+    return {"summary": summary, "rows": rows[:limit]}
+
+
+@api.get("/admin/payments/{payment_type}/{ref_id}")
+async def admin_payment_detail(payment_type: str, ref_id: str, admin: dict = Depends(require_admin)):
+    if payment_type == "kit":
+        row = await db.kit_orders.find_one({"order_id": ref_id}, {"_id": 0})
+    elif payment_type == "order":
+        row = await db.orders.find_one({"order_id": ref_id}, {"_id": 0})
+    elif payment_type == "withdrawal":
+        row = await db.withdrawals.find_one({"withdrawal_id": ref_id}, {"_id": 0})
+    else:
+        raise HTTPException(status_code=400, detail="Invalid payment_type")
+    if not row:
+        raise HTTPException(status_code=404, detail="Not found")
+    user_brief = await _fetch_user_brief(row.get("user_id"))
+    # related commission transactions from this ref
+    related_tx = await db.wallet_transactions.find(
+        {"description": {"$regex": ref_id[:8]}}, {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return {
+        "payment_type": payment_type,
+        "data": row,
+        "user": user_brief,
+        "related_commissions": related_tx,
+    }
+
+
+@api.patch("/admin/payments/{payment_type}/{ref_id}/note")
+async def admin_payment_update_note(payment_type: str, ref_id: str, data: PaymentNoteIn, admin: dict = Depends(require_admin)):
+    """Attach a transaction reference (UTR / bank txn id) and/or admin note."""
+    update = {k: v for k, v in data.model_dump().items() if v is not None}
+    if not update:
+        raise HTTPException(status_code=400, detail="Nothing to update")
+    if payment_type == "kit":
+        res = await db.kit_orders.update_one({"order_id": ref_id}, {"$set": update})
+    elif payment_type == "order":
+        res = await db.orders.update_one({"order_id": ref_id}, {"$set": update})
+    elif payment_type == "withdrawal":
+        res = await db.withdrawals.update_one({"withdrawal_id": ref_id}, {"$set": update})
+    else:
+        raise HTTPException(status_code=400, detail="Invalid payment_type")
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"ok": True, "updated": update}
+
+
 @api.post("/admin/cashback/run")
 async def admin_run_cashback(admin: dict = Depends(require_admin)):
     """Pay all due monthly cashbacks (due_date <= now and not paid)."""
