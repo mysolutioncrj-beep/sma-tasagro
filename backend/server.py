@@ -41,6 +41,7 @@ DB_NAME = os.environ["DB_NAME"]
 JWT_SECRET = os.environ["JWT_SECRET"]
 JWT_ALGO = "HS256"
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "auto").lower()
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@example.com")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 KIT_PRICE = float(os.environ.get("KIT_PRICE", "10000"))
@@ -130,13 +131,44 @@ def create_refresh_token(user_id: str) -> str:
 
 
 def set_auth_cookies(response: Response, access: str, refresh: str) -> None:
-    response.set_cookie("access_token", access, httponly=True, secure=False, samesite="lax", max_age=7200, path="/")
-    response.set_cookie("refresh_token", refresh, httponly=True, secure=False, samesite="lax", max_age=604800, path="/")
+    # Cross-site frontend/backend deployments (e.g. custom domain -> onrender.com)
+    # require SameSite=None + Secure for browser cookie transport.
+    is_https_frontend = FRONTEND_URL.startswith("https://")
+    if COOKIE_SECURE in ("1", "true", "yes"):
+        secure = True
+    elif COOKIE_SECURE in ("0", "false", "no"):
+        secure = False
+    else:
+        secure = is_https_frontend
+
+    samesite = "none" if secure else "lax"
+
+    response.set_cookie(
+        "access_token",
+        access,
+        httponly=True,
+        secure=secure,
+        samesite=samesite,
+        max_age=7200,
+        path="/",
+    )
+    response.set_cookie(
+        "refresh_token",
+        refresh,
+        httponly=True,
+        secure=secure,
+        samesite=samesite,
+        max_age=604800,
+        path="/",
+    )
 
 
 def clear_auth_cookies(response: Response) -> None:
-    response.delete_cookie("access_token", path="/")
-    response.delete_cookie("refresh_token", path="/")
+    is_https_frontend = FRONTEND_URL.startswith("https://")
+    secure = True if COOKIE_SECURE in ("1", "true", "yes") else (False if COOKIE_SECURE in ("0", "false", "no") else is_https_frontend)
+    samesite = "none" if secure else "lax"
+    response.delete_cookie("access_token", path="/", secure=secure, samesite=samesite)
+    response.delete_cookie("refresh_token", path="/", secure=secure, samesite=samesite)
 
 
 def gen_referral_code(name: str) -> str:
@@ -460,7 +492,10 @@ async def register(data: RegisterIn, response: Response):
     access = create_access_token(str(res.inserted_id), email)
     refresh = create_refresh_token(str(res.inserted_id))
     set_auth_cookies(response, access, refresh)
-    return serialize_user(user_doc)
+    result = serialize_user(user_doc)
+    # Token in body is a fallback for environments where third-party cookies are blocked.
+    result["access_token"] = access
+    return result
 
 
 @api.post("/auth/login")
@@ -488,7 +523,10 @@ async def login(data: LoginIn, response: Response, request: Request):
     access = create_access_token(str(user["_id"]), email)
     refresh = create_refresh_token(str(user["_id"]))
     set_auth_cookies(response, access, refresh)
-    return serialize_user(user)
+    result = serialize_user(user)
+    # Token in body is a fallback for environments where third-party cookies are blocked.
+    result["access_token"] = access
+    return result
 
 
 @api.post("/auth/logout")
@@ -1284,13 +1322,15 @@ async def on_shutdown():
 
 
 app.include_router(api)
+allowed_origins = {
+    "https://sma-tasagro-yr9p.vercel.app",
+    "https://sma-tasagro.com",
+    "https://www.sma-tasagro.com",
+    FRONTEND_URL,
+}
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://sma-tasagro-yr9p.vercel.app",
-        "https://sma-tasagro.com",
-        "https://www.sma-tasagro.com"
-    ],
+    allow_origins=list(allowed_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

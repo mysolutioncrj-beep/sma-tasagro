@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/apiClient";
+import { formatApiErrorDetail } from "@/lib/apiClient";
 
 // Render binary tree as a fixed-depth level grid (non-recursive JSX to avoid babel traversal issues)
 export default function TreePage() {
   const [tree, setTree] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api.get("/user/tree?depth=4").then((r) => setTree(r.data));
+    api
+      .get("/user/tree?depth=4")
+      .then((r) => setTree(r.data))
+      .catch((e) => setError(formatApiErrorDetail(e?.response?.data?.detail || "Failed to load tree")));
   }, []);
 
   return (
@@ -18,7 +23,13 @@ export default function TreePage() {
       </p>
 
       <div className="card-dark p-6 overflow-x-auto" style={{ background: "#050505" }}>
-        {tree ? <LevelGrid root={tree} /> : <div className="text-zinc-500 text-sm py-12 text-center">Loading tree…</div>}
+        {tree ? (
+          <LevelGrid root={tree} />
+        ) : error ? (
+          <div className="text-red-400 text-sm py-12 text-center">{error}</div>
+        ) : (
+          <div className="text-zinc-500 text-sm py-12 text-center">Loading tree…</div>
+        )}
       </div>
     </div>
   );
